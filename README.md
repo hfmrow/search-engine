@@ -50,7 +50,7 @@
 
 ## How to compile
 - Be sure you have golang installed in right way. [Go installation](https://golang.org/doc/install).
-- Open terminal window and at command prompt, type: `go get github.com/hfmrow/searchengine`
+- Open terminal window and at command prompt, type: `go get github.com/hfmrow/searchEngine`
 - See [Gotk3 Installation instructions](https://github.com/gotk3/gotk3/wiki#installation) for gui installation instruction.
 - To change gtk3 interface you need to use a home made software, (not published actually). So don't change gtk3 interface (glade file) ...
 - To change language file you need to use another home made software, (not published actually). So don't change language file ...
