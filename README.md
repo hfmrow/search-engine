@@ -12,7 +12,7 @@ Take a look [here, H.F.M repositories](https://github.com/hfmrow/) for other use
 - GUI provided by [Gotk3 (gtk3 v3.22)](https://github.com/gotk3/gotk3), GUI library for Go (minimum required v3.16).
 - I use homemade software: "Gotk3ObjHandler" to embed images/icons, UI-information and manage/generate gtk3 objects code from [glade ui designer](https://glade.gnome.org/). and "Gotk3ObjTranslate" to generate the language files and the assignment of a tooltip on the gtk3 objects (both are not published at the moment, in fact, they need documentations and, for the moment, I have not had the time to do them).
 
-## Fonctionnalities
+## Functionalities
 - Search files based on patterns (contained in filename).
 - Search files based on file type (all, files, dir, link).
 - Search files based on date time (newer than, older than).
