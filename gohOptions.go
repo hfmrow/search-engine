@@ -25,7 +25,7 @@ var Creat = "H.F.M"
 var YearCreat = "2018"
 var LicenseShort = "This program comes with absolutely no warranty.\nSee the The MIT License (MIT) for details:\nhttps://opensource.org/licenses/mit-license.php"
 var LicenseAbrv = "License (MIT)"
-var Repository = "github.com/hfmrow/searchengine"
+var Repository = "github.com/hfmrow/searchEngine"
 
 // Vars declarations
 var absoluteRealPath, optFilename = getAbsRealPath()
