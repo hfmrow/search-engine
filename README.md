@@ -1,6 +1,8 @@
 # Search Engine
 *This program is designed to search files over directory, subdirectory, and retrieving information based on date/time, type, patterns contained in name. i'm using it as a replacement for native search function.*
 
+Take a look [here, H.F.M repositories](https://github.com/hfmrow/) for other useful linux softwares.
+
 - If you just want to use it, simply download the compiled version under the "release" tab. You can see at [the Right way to install H.F.M's softwares](https://github.com/hfmrow/instHFMsofts) page to integrate this software in your debian environment.
 	
 - If you want to play inside code, see below "How to compile" section.
