@@ -24,6 +24,7 @@ Take a look [here, H.F.M repositories](https://github.com/hfmrow/) for other use
 - Patterns can be splitted (at space char) to add multiples searches for each logical operator.
 - Directory depth can be defined.
 - History of previous pettern are recorded and can be erased as you whish
+- Context menu to open file, open internet browser, open directory, copy path, delete selection(s).
 - Export function is available to save the results list in txt format.
 - Each function have his tooltip for explanations.
 
@@ -46,6 +47,9 @@ Take a look [here, H.F.M repositories](https://github.com/hfmrow/) for other use
 
 *History display*  
 ![History display](readME-Pic/histSearch.png  "History display")  
+
+*Context menu*  
+![Context menu](readME-Pic/contextMenu.png  "Context menu")  
 
 *Tooltip display*  
 ![Tooltip display](readME-Pic/tooltipDisp.png  "Tooltip display")  
