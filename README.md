@@ -30,7 +30,7 @@ Take a look [here, H.F.M repositories](https://github.com/hfmrow/) for other use
 
 ## Some pictures and explanations  
 
-*This is the main screen.*  
+*This is the main screen. *  
 ![Main](readME-Pic/mainScr.png  "Main")  
 
 *Search result.*  
