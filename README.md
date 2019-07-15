@@ -8,7 +8,7 @@ Take a look [here, H.F.M repositories](https://github.com/hfmrow/) for other use
 - If you want to play inside code, see below "How to compile" section.
 
 ## How it's made
-- Programed with go language: [golang](https://golang.org/doc/) 
+- Programmed with go language: [golang](https://golang.org/doc/) 
 - GUI provided by [Gotk3 (gtk3 v3.22)](https://github.com/gotk3/gotk3), GUI library for Go (minimum required v3.16).
 - I use homemade software: "Gotk3ObjHandler" to embed images/icons, UI-information and manage/generate gtk3 objects code from [glade ui designer](https://glade.gnome.org/). and "Gotk3ObjTranslate" to generate the language files and the assignment of a tooltip on the gtk3 objects (both are not published at the moment, in fact, they need documentations and, for the moment, I have not had the time to do them).
 
@@ -18,19 +18,19 @@ Take a look [here, H.F.M repositories](https://github.com/hfmrow/) for other use
 - Search files based on date time (newer than, older than).
 - Wildcard, regex, case sensitive, character classes can be used.
 - Date/time display can be in human readable or classic format.
-- Modification or last acces date time display selection.
+- Modification or last access date time display selection.
 - And, or, not as logical operators may be used.
 - Whole word functionality.
 - Patterns can be splitted (at space char) to add multiples searches for each logical operator.
 - Directory depth can be defined.
-- History of previous pettern are recorded and can be erased as you whish
+- History of previous pettern are recorded and can be erased as you wish
 - Context menu to open file, open internet browser, open directory, copy path, delete selection(s).
 - Export function is available to save the results list in txt format.
 - Each function have his tooltip for explanations.
 
 ## Some pictures and explanations  
 
-*This is the main screen. *  
+*This is the main screen.*  
 ![Main](readME-Pic/mainScr.png  "Main")  
 
 *Search result.*  
@@ -90,5 +90,5 @@ This operation indicate that externals datas (Image/Icons) must be embedded into
 - The compilation have not been tested under Windows or Mac OS, but all file access functions, line-end manipulations or charset implementation are made with OS portability in mind.  
 
 ## You got an issue ?
-- Give informations (as above), about used plateform and OS version.
+- Give informations (as above), about used platform and OS version.
 - Provide a method to reproduce the problem.
