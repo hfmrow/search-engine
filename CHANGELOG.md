@@ -1,21 +1,21 @@
-# Changelog
+## Changelog
 
-## SearchEngine ©2018-19 H.F.M
+### SearchEngine ©2018-19 H.F.M
 
 All notable changes to this project will be documented in this file.
 
-## [1.8.5] 2019-10-03
+### [1.8.5] 2019-10-03
 
-### Added
+#### Added
 
 - Option to allow the analysis of symlinked directories.
 
-### Fixed
+#### Fixed
 
 - And operand: now correctly manages the functionality of the splitted words.
 - Solving issues on errors occuring sometimes on opening text file with "GDK_FATAL_ERROR" or while opening directory that getting permission error with a"GVFS-WARNING"
 
-### Changed
+#### Changed
 
 - some parts of the search function have been rewritten to avoid some minor issues.
 - Display current path in the title bar rather than the tatusbar.
