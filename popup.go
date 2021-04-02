@@ -7,81 +7,73 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/gotk3/gotk3/glib"
 	"github.com/gotk3/gotk3/gtk"
+	"gopkg.in/djherbis/times.v1"
 
 	glfs "github.com/hfmrow/genLib/files"
+	glsg "github.com/hfmrow/genLib/strings"
 	glts "github.com/hfmrow/genLib/tools"
 )
 
-// initPopup: The popup for TreeView control ...
-func initPopup(tw *gtk.TreeView, ls *gtk.ListStore) *gtk.Menu {
-	var MenuItemNewWithImage = func(label string, icon interface{}) (menuItem *gtk.MenuItem, err error) {
-		box, err := gtk.BoxNew(gtk.ORIENTATION_HORIZONTAL, 1)
-		if err == nil {
-			image, err := gtk.ImageNew()
-			if err == nil {
-				setImage(image, icon, 14)
-				label, err := gtk.LabelNewWithMnemonic(label)
-				if err == nil {
-					menuItem, err = gtk.MenuItemNew()
-					if err == nil {
-						label.SetHAlign(gtk.ALIGN_START)
-						box.Add(image)
-						box.PackEnd(label, true, true, 8)
-						menuItem.Container.Add(box)
-						menuItem.ShowAll()
-					}
-				}
-			}
-		}
-		return menuItem, err
-	}
-	/*	Make menu	*/
-	menu, err := gtk.MenuNew()
-	Check(err)
-	var menuItem, menuItem1, menuItem2, menuItem3, menuItem4 *gtk.MenuItem
-	var separatorMenuItem *gtk.SeparatorMenuItem
-	if menuItem, err = MenuItemNewWithImage("_Launch/Open", play20); err == nil {
-		if menuItem1, err = MenuItemNewWithImage("_Web browser", globalNetwork20); err == nil {
-			if menuItem2, err = MenuItemNewWithImage("_Open directory", folderOpen20); err == nil {
-				if menuItem3, err = MenuItemNewWithImage("_Copy path", copyDocument20); err == nil {
-					if separatorMenuItem, err = gtk.SeparatorMenuItemNew(); err == nil {
-						menuItem4, err = MenuItemNewWithImage("_Delete", signError20)
-					}
-				}
-			}
-		}
-	}
-	Check(err)
+// initPopup: The popup for the TreeView.
+func initPopup() *gtk.Menu {
+	popupMenu = PopupMenuIconStructNew()
 
-	menuItem.Connect("activate", func() { launchFile() })
-	menuItem1.Connect("activate", func() { go openInBrowser() })
-	menuItem2.Connect("activate", func() { openDir() })
-	menuItem3.Connect("activate", func() { toClipboard() })
-	menuItem4.Connect("activate", func() { deleteEntry() })
-	/*	Add options items to menu	*/
-	menu.Append(menuItem)
-	menu.Append(menuItem1)
-	menu.Append(menuItem2)
-	menu.Append(menuItem3)
-	menu.Append(separatorMenuItem)
-	menu.Append(menuItem4)
-	/*	Show menu	*/
-	menu.ShowAll()
-	return menu
+	popupMenu.AddItem("_Launch/Open", launchFile, popupMenu.OPT_ICON|popupMenu.OPT_NORMAL, play20)
+	popupMenu.AddItem("_Web browser", openInBrowser, popupMenu.OPT_ICON|popupMenu.OPT_NORMAL, globalNetwork20)
+	popupMenu.AddItem("Open _directory", openDir, popupMenu.OPT_ICON|popupMenu.OPT_NORMAL, folder48)
+	popupMenu.AddItem("_Copy to clipboard", toClipboard, popupMenu.OPT_ICON|popupMenu.OPT_NORMAL, copyDocument20)
+	popupMenu.AddItem("", nil, popupMenu.OPT_SEPARATOR)
+	popupMenu.AddItem("Time to _Newer than", func() { toCalendar(false) }, popupMenu.OPT_ICON|popupMenu.OPT_NORMAL, calendarPers48)
+	popupMenu.AddItem("Time to _Older than", func() { toCalendar(true) }, popupMenu.OPT_ICON|popupMenu.OPT_NORMAL, calendarPers48)
+	popupMenu.AddItem("", nil, popupMenu.OPT_SEPARATOR)
+	popupMenu.AddItem("_Delete", deleteEntry, popupMenu.OPT_ICON|popupMenu.OPT_NORMAL, stop48)
+	return popupMenu.MenuBuild()
 }
 
-// Copy path to clipboard
+// toCalendar: default, set to newer than otherwise, set to older than
+func toCalendar(toOlder bool) {
+	var err error
+	var selected [][]string
+	if selected, err = tvs.GetSelectedRows(); err == nil {
+		for _, entry := range storeFoundFiles {
+			if entry.FilePath == filepath.Join(selected[0][4], selected[0][0]) {
+				var timeInfo time.Time
+				infos := times.Get(entry.FileInfo)
+				switch mainObjects.SearchComboboxTextDateType.GetActive() {
+				case 0, 2:
+					timeInfo = infos.AccessTime()
+				case 1, 3:
+					timeInfo = infos.ModTime()
+				}
+				if mainObjects.SearchComboboxTextDateZone.GetActive() == 0 {
+					timeInfo = timeInfo.UTC()
+				}
+				if !toOlder {
+					mainOptions.calDataNewerThan.FromTime(timeInfo)
+					setCalendarbuttonLabel(mainObjects.SearchButtonNewerThan, mainOptions.calDataNewerThan)
+				} else {
+					mainOptions.calDataOlderThan.FromTime(timeInfo)
+					setCalendarbuttonLabel(mainObjects.SearchButtonOlderThan, mainOptions.calDataOlderThan)
+				}
+			}
+		}
+	}
+}
+
+// toClipboard: Copy path(s) to clipboard
 func toClipboard() {
 	var err error
 	var selected [][]string
 	var tmpFileNames string
-	if selected, err = getSelectedAsString(); err == nil {
+	if selected, err = tvs.GetSelectedRows(); err == nil {
 		for _, row := range selected {
 			tmpFileNames += filepath.Join(row[4], row[0]) + "\n"
 		}
@@ -90,89 +82,112 @@ func toClipboard() {
 			"You got a problem with some selected row(s)\n\n"+err.Error()+"\n",
 			"", "Ok")
 	}
-
-	clipboard.SetText(tmpFileNames)
+	clipboard.SetText(strings.Trim(tmpFileNames, glsg.GetTextEOL([]byte(tmpFileNames))))
 	clipboard.Store()
 }
 
-// getSelectedAsString: Retrieve values of ll selected rows
-func getSelectedAsString() (outSlice [][]string, err error) {
-	var iters []*gtk.TreeIter
-	if iters, err = tvs.GetSelectedIters(); err == nil {
-		outSlice, err = tvs.GetSelectedRows(iters...)
-	}
-	if len(outSlice) == 0 {
-		return outSlice, errNoSelection
-	}
-	return
-}
-
-// Open in browser
+// openInBrowser:
 func openInBrowser() {
-	var err error
-	var result []byte
-	var selected [][]string
-	if selected, err = getSelectedAsString(); err == nil {
-		_, _ = glib.IdleAdd(func() { // idle run to permit gtk3 working right during goroutine
-			result, err = glts.ExecCommand(mainOptions.AppLauncher,
-				mainOptions.WebSearchEngine+glfs.BaseNoExt(filepath.Base(selected[0][0])))
-			if err != nil && err != errNoSelection { // don't warn on "unselected row" case.
-				DialogMessage(mainObjects.MainWindow, "info", "Information !",
-					"You got a problem with:\n"+filepath.Join(selected[0][4], selected[0][0])+
-						"\n\n"+err.Error()+"\n\nTerminal output:\n"+string(result), "", "Ok")
-			}
-		})
-	}
+
+	var (
+		selected [][]string
+		err      error
+		filename string
+	)
+
+	if selected, err = tvs.GetSelectedRows(); err == nil {
+		filename = mainOptions.WebSearchEngine + glfs.BaseNoExt(filepath.Base(selected[0][0]))
+		open(filename)
+	} /* else {
+
+	}*/
+
+	// var err error
+	// var result []byte
+	// var selected [][]string
+	// if selected, err = tvs.GetSelectedRows(); err == nil {
+	// 	// Using Goroutine to freeing current thread and make it independent.
+	// 	go glib.IdleAdd(func() { // IdleAdd run to permit gtk3 working right during goroutine
+	// 		openresult, err = glts.ExecCommand(mainOptions.AppLauncher,
+	// 			mainOptions.WebSearchEngine+glfs.BaseNoExt(filepath.Base(selected[0][0])))
+	// 	})
+	// }
 }
 
-// Run filename
+// launchFile:
 func launchFile() {
-	var selected [][]string
-	var err error
-	var filename string
-	if selected, err = getSelectedAsString(); err == nil {
-		glib.IdleAdd(func() { // idle run to permit gtk3 working right during goroutine
-			filename = filepath.Join(selected[0][4], selected[0][0])
-			go glts.ExecCommand(mainOptions.AppLauncher, filename)
-		})
-	}
+
+	var (
+		selected [][]string
+		err      error
+		filename string
+	)
+
+	if selected, err = tvs.GetSelectedRows(); err == nil {
+		filename = filepath.Join(selected[0][4], selected[0][0])
+		open(filename)
+	} /* else {
+
+	}*/
 }
 
-// Open directory filename
+// openDir:
 func openDir() {
-	var selected [][]string
-	var err error
-	var filename string
-	if selected, err = getSelectedAsString(); err == nil {
-		glib.IdleAdd(func() { // idle run to permit gtk3 working right during goroutine
-			filename = filepath.Join(selected[0][4], selected[0][0])
-			go glts.ExecCommand(mainOptions.AppLauncher, filepath.Dir(filename))
-		})
-	}
+
+	var (
+		selected [][]string
+		err      error
+		filename string
+	)
+
+	if selected, err = tvs.GetSelectedRows(); err == nil {
+		filename = filepath.Join(selected[0][4], selected[0][0])
+		open(filepath.Dir(filename))
+	} /* else {
+
+	}*/
 }
 
-// deleteEntry
+// open: show file or dir depending on "path".
+func open(path string) {
+
+	var goFunc = func() {
+		if outTerm, err := glts.ExecCommand([]string{mainOptions.AppLauncher, path}); err != nil {
+
+			// Error is handled by "xdg-open" command
+
+			fmt.Println(err, outTerm)
+		}
+	}
+	// IdleAdd to permit gtk3 working right during goroutine
+	glib.IdleAdd(func() {
+		// Using goroutine to permit the usage of another
+		// thread and freeing the current one.
+		go goFunc()
+	})
+}
+
+// deleteEntry:
 func deleteEntry() {
 	var err error
-	var selected [][]string
 	var tmpFileNames string
 	var iters []*gtk.TreeIter
-	if iters, err = tvs.GetSelectedIters(); err == nil {
-		if selected, err = tvs.GetSelectedRows(iters...); err == nil {
-			for _, row := range selected {
-				tmpFileNames += filepath.Join(row[4], row[0]) + "\n"
-			}
-			if DialogMessage(mainObjects.MainWindow, "info", "Information !",
-				"\nAre you sure, you want to delete file(s):\n\n"+strings.Trim(tmpFileNames, "\n"),
-				"", sts["yes"], sts["no"]) == 0 {
+	// Iters needed to be able to remove selected rows
+	if iters = tvs.GetSelectedIters(); len(iters) > 0 {
+		for _, iter := range iters {
+			tmpFileNames += tvs.GetColValue(iter, 0).(string) + "\n" // Get filename
+		}
+		if DialogMessage(mainObjects.MainWindow, "info", "Information !",
+			fmt.Sprintf("\nAre you sure, want you to delete %d file(s):\n\n", len(iters))+strings.Trim(tmpFileNames, "\n"),
+			"", sts["yes"], sts["no"]) == 0 {
 
-				for idx, row := range selected {
-					if err = os.Remove(filepath.Join(row[4], row[0])); err == nil {
-						err = tvs.RemoveSelectedRows(iters[idx])
-					}
-					if err != nil {
-						break
-					}
+			for _, iter := range iters {
+				if err = os.RemoveAll(
+					// Get Full path
+					filepath.Join(tvs.GetColValue(iter, 4).(string),
+						tvs.GetColValue(iter, 0).(string))); err == nil || os.IsNotExist(err) {
+					// do it one by one in case of error, process will be stopped.
+					tvs.RemoveSelectedRows(iter)
 				}
 			}
 		}

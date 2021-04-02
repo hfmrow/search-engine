@@ -31,11 +31,15 @@
 
 # Personal unwanted files and folders
 gohBackup/*
+package/*
+assets/artWork/*
 *.opt
+*.log
 *~
 *.debug
 *.xz
 *.7z
 *.SUM
 *.desktop
+git-push.sh
 

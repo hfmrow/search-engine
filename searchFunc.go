@@ -14,16 +14,16 @@ import (
 
 	"github.com/dustin/go-humanize"
 	"github.com/gotk3/gotk3/gtk"
+	"gopkg.in/djherbis/times.v1"
 
 	glfsff "github.com/hfmrow/genLib/files/findFiles"
 	glss "github.com/hfmrow/genLib/slices"
 	gltsbh "github.com/hfmrow/genLib/tools/bench"
-
-	"gopkg.in/djherbis/times.v1"
 )
 
-/* Scan files and display it */
-func fillListstore() (err error) {
+// fillListstore: Scan files and display it
+func fillListstore() {
+	var err error
 	var fileInfo os.FileInfo
 	find := glfsff.SearchNew()
 	timer = gltsbh.BenchNew(false)
@@ -37,9 +37,10 @@ func fillListstore() (err error) {
 
 				if fileInfo.IsDir() && find.Ready {
 					timer.Lapse("Searching")
-					if mainOptions.foundFilesList, err = find.FindDepth(mainOptions.LastDirectory,
-						mainOptions.Depth, false, mainObjects.SearchCheckbuttonFollowSL.GetActive()); err != nil {
-						return err
+					if storeFoundFiles, err = find.FindDepth(mainOptions.LastDirectory,
+						mainOptions.Depth, true, mainObjects.SearchCheckbuttonFollowSL.GetActive()); err != nil {
+						DialogMessage(mainObjects.MainWindow, "error", "Error occured during search", "\n\n"+err.Error(), "", sts["ok"])
+						return
 					}
 					timer.Lapse("Display")
 					/* Show results */
@@ -53,15 +54,17 @@ func fillListstore() (err error) {
 			}
 		}
 	}
-	return err
+	if err != nil {
+		DialogMessage(mainObjects.MainWindow, "error", "Error occured during search", "\n\n"+err.Error(), "", "Ok")
+	}
 }
 
-// Get text from gtk.comboBoxTextEntry object
+// getEntryText:
 func getEntryText(cbxEntry *gtk.ComboBoxText) string {
 	return cbxEntry.GetActiveText()
 }
 
-/* Fill / Clean comboBoxText */
+// fillComboboxText: Fill / Clean comboBoxText
 func fillComboboxText(cbxt *gtk.ComboBoxText, text string, removAll ...bool) {
 	if len(removAll) == 0 {
 		cbxt.PrependText(text)
@@ -70,7 +73,7 @@ func fillComboboxText(cbxt *gtk.ComboBoxText, text string, removAll ...bool) {
 	}
 }
 
-/* Fill All comboBoxText */
+// fillAllComboboxText:
 func fillAllComboboxText(removAll ...bool) {
 	if len(removAll) != 0 {
 		fillComboboxText(mainObjects.SearchComboboxTextAnd, "", removAll[0])
@@ -96,7 +99,7 @@ func fillAllComboboxText(removAll ...bool) {
 	}
 }
 
-/* Build words to fit search structure */
+// makeWords: Build words to fit search structure
 func makeWords(find *glfsff.Search, line string, wWord, op string) {
 	words := strings.Split(line, " ")
 	for _, word := range words {
@@ -104,71 +107,80 @@ func makeWords(find *glfsff.Search, line string, wWord, op string) {
 	}
 }
 
-/* search job */
+// doDisplay: display found files
 func doDisplay() {
-	var err error
-	var dispTime, extDir string
-	var stats os.FileInfo
-	var mTime, aTime time.Time
-	// var isText bool
+
+	var (
+		dispTime,
+		extDir string
+		timeUnix int64
+		mTime,
+		aTime time.Time
+	)
 
 	tvs.StoreDetach()
+	defer tvs.StoreAttach()
 	tvs.ListStore.Clear()
 
 	/* Store and display found files */
-	if len(mainOptions.foundFilesList) != 0 {
-		for _, file := range mainOptions.foundFilesList {
+	if len(storeFoundFiles) != 0 {
+		for _, file := range storeFoundFiles {
 			extDir = ""
-			if stats, err = os.Lstat(file); err == nil && !os.IsNotExist(err) {
-				switch {
-				case stats.IsDir():
-					extDir = "Dir"
-				case stats.Mode()&os.ModeSymlink != 0:
-					extDir = "Link"
-				default:
-					// if isText, _, err = g.IsTextFileSimple(file, -1, 0.6, 97); err == nil && isText {
-					// 	extDir = filepath.Ext(file) + "/txt"
-					// } else {
-					if ext := filepath.Ext(file); len(ext) > 1 {
-						extDir = ext[1:]
-					}
-					// }
+			switch {
+			case file.FileInfo.IsDir():
+				extDir = "Dir"
+			case file.FileInfo.Mode()&os.ModeSymlink != 0:
+				extDir = "Link"
+			default:
+				if ext := filepath.Ext(file.FileInfo.Name()); len(ext) > 1 {
+					extDir = ext[1:]
 				}
-
-				mTime = times.Get(stats).ModTime()
-				aTime = times.Get(stats).AccessTime()
-				switch mainObjects.SearchComboboxTextDateType.GetActive() {
-				case 0:
-					dispTime = aTime.String()[:16]
-				case 1:
-					dispTime = mTime.String()[:16]
-				case 2:
-					dispTime = humanize.Time(aTime)
-				case 3:
-					dispTime = humanize.Time(mTime)
-				}
-				tvs.AddRow(nil, tvs.ColValuesStringSliceToIfaceSlice(
-					filepath.Base(file),
-					humanize.Bytes(uint64(stats.Size())),
-					// fmt.Sprintf("%d", stats.Size()),
-					extDir,
-					dispTime,
-					filepath.Dir(file)))
 			}
+			if mainObjects.SearchComboboxTextDateZone.GetActive() == 0 {
+				mTime = times.Get(file.FileInfo).ModTime().UTC()
+				aTime = times.Get(file.FileInfo).AccessTime().UTC()
+			} else {
+				mTime = times.Get(file.FileInfo).ModTime().Local()
+				aTime = times.Get(file.FileInfo).AccessTime().Local()
+			}
+			switch mainObjects.SearchComboboxTextDateType.GetActive() {
+			case 0:
+				dispTime = aTime.String()[:16]
+				timeUnix = aTime.Unix()
+			case 1:
+				dispTime = mTime.String()[:16]
+				timeUnix = mTime.Unix()
+			case 2:
+				dispTime = humanize.Time(aTime)
+				timeUnix = aTime.Unix()
+			case 3:
+				dispTime = humanize.Time(mTime)
+				timeUnix = mTime.Unix()
+			}
+			tvs.AddRow(nil,
+				file.FileInfo.Name(),
+				humanize.Bytes(uint64(file.FileInfo.Size())),
+				extDir,
+				dispTime,
+				filepath.Dir(file.FilePath),
+				file.FileInfo.Size(), // invisible
+				timeUnix)             // invisible
 		}
 	}
-	tvs.StoreAttach()
-
 }
 
-/*	Get entry from controls */
+// computeEntry: Get entry from controls
 func computeEntry(find *glfsff.Search) bool {
 
-	var wWordAnd, wWordOr, wWordNot, entryAnd, entryOr, entryNot string
+	var (
+		wWordAnd,
+		wWordOr,
+		wWordNot string
 
-	entryAnd = getEntryText(mainObjects.SearchComboboxTextAnd)
-	entryOr = getEntryText(mainObjects.SearchComboboxTextOr)
-	entryNot = getEntryText(mainObjects.SearchComboboxTextNot)
+		entryAnd = getEntryText(mainObjects.SearchComboboxTextAnd)
+		entryOr  = getEntryText(mainObjects.SearchComboboxTextOr)
+		entryNot = getEntryText(mainObjects.SearchComboboxTextNot)
+	)
 
 	/* Check if there is some entry */
 	if len(entryAnd+entryOr+entryNot) == 0 {
@@ -222,7 +234,7 @@ func computeEntry(find *glfsff.Search) bool {
 	return true
 }
 
-/*	Get datas from controls */
+// computeOptions: Get options from controls
 func computeOptions(find *glfsff.Search) {
 
 	mainOptions.LastDirectory = mainObjects.SearchFilechooserbutton.GetFilename()
@@ -249,24 +261,12 @@ func computeOptions(find *glfsff.Search) {
 	find.POSIXcharClass = mainObjects.SearchCheckbuttonCharClasses.GetActive()
 	find.POSIXstrictMode = mainObjects.SearchCheckbuttonCharClassesStrictMode.GetActive()
 
-	if mainOptions.searchNewerThan.Ready {
-		find.SearchTime.SetNewerThan(mainOptions.searchNewerThan.Ready,
-			int(mainOptions.searchNewerThan.d),
-			int(mainOptions.searchNewerThan.m),
-			int(mainOptions.searchNewerThan.y),
-			int(mainOptions.searchNewerThan.H),
-			int(mainOptions.searchNewerThan.M),
-			int(mainOptions.searchNewerThan.S))
+	// send date/time to search options corresponding to current choosen zone.
+	if mainObjects.SearchComboboxTextDateZone.GetActive() == 1 {
+		find.SearchTime.SetNewerThan(mainOptions.calDataNewerThan.ToTimeAsUTC())
+		find.SearchTime.SetOlderThan(mainOptions.calDataOlderThan.ToTimeAsUTC())
+	} else {
+		find.SearchTime.SetNewerThan(mainOptions.calDataNewerThan.ToTime())
+		find.SearchTime.SetOlderThan(mainOptions.calDataOlderThan.ToTime())
 	}
-
-	if mainOptions.searchOlderThan.Ready {
-		find.SearchTime.SetOlderThan(mainOptions.searchOlderThan.Ready,
-			int(mainOptions.searchOlderThan.d),
-			int(mainOptions.searchOlderThan.m),
-			int(mainOptions.searchOlderThan.y),
-			int(mainOptions.searchOlderThan.H),
-			int(mainOptions.searchOlderThan.M),
-			int(mainOptions.searchOlderThan.S))
-	}
-
 }

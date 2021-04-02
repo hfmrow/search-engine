@@ -1,6 +1,6 @@
 // translate.go
 
-// File generated on Thu, 03 Oct 2019 01:29:58 using Gotk3ObjectsTranslate v1.3 2019 H.F.M
+// File generated on Thu, 03 Dec 2020 02:45:20 using Gotk3 Objects Translate v1.5 2019-20 H.F.M
 
 /*
 * 	This program comes with absolutely no warranty.
@@ -15,7 +15,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"os"
 	"strings"
 
 	"github.com/gotk3/gotk3/gtk"
@@ -44,6 +43,7 @@ func (trans *MainTranslate) initGtkObjectsText() {
 	trans.setTextToGtkObjects(&mainObjects.SearchCheckbuttonWordOr.Widget, "SearchCheckbuttonWordOr")
 	trans.setTextToGtkObjects(&mainObjects.SearchComboboxTextAnd.Widget, "SearchComboboxTextAnd")
 	trans.setTextToGtkObjects(&mainObjects.SearchComboboxTextDateType.Widget, "SearchComboboxTextDateType")
+	trans.setTextToGtkObjects(&mainObjects.SearchComboboxTextDateZone.Widget, "SearchComboboxTextDateZone")
 	trans.setTextToGtkObjects(&mainObjects.SearchComboboxTextEntryAnd.Widget, "SearchComboboxTextEntryAnd")
 	trans.setTextToGtkObjects(&mainObjects.SearchComboboxTextEntryNot.Widget, "SearchComboboxTextEntryNot")
 	trans.setTextToGtkObjects(&mainObjects.SearchComboboxTextEntryOr.Widget, "SearchComboboxTextEntryOr")
@@ -53,18 +53,7 @@ func (trans *MainTranslate) initGtkObjectsText() {
 	trans.setTextToGtkObjects(&mainObjects.SearchFilechooserbutton.Widget, "SearchFilechooserbutton")
 	trans.setTextToGtkObjects(&mainObjects.SearchSpinbuttonDepth.Widget, "SearchSpinbuttonDepth")
 	trans.setTextToGtkObjects(&mainObjects.SearchTreeview.Widget, "SearchTreeview")
-	trans.setTextToGtkObjects(&mainObjects.TimeButtonOkNewer.Widget, "TimeButtonOkNewer")
-	trans.setTextToGtkObjects(&mainObjects.TimeButtonOkOlder.Widget, "TimeButtonOkOlder")
-	trans.setTextToGtkObjects(&mainObjects.TimeButtonResetNewer.Widget, "TimeButtonResetNewer")
-	trans.setTextToGtkObjects(&mainObjects.TimeButtonResetOlder.Widget, "TimeButtonResetOlder")
-	trans.setTextToGtkObjects(&mainObjects.TimeImageTopNewer.Widget, "TimeImageTopNewer")
-	trans.setTextToGtkObjects(&mainObjects.TimeImageTopOlder.Widget, "TimeImageTopOlder")
-	trans.setTextToGtkObjects(&mainObjects.TimeSpinbuttonHourNewer.Widget, "TimeSpinbuttonHourNewer")
-	trans.setTextToGtkObjects(&mainObjects.TimeSpinbuttonHourOlder.Widget, "TimeSpinbuttonHourOlder")
-	trans.setTextToGtkObjects(&mainObjects.TimeSpinbuttonMinutsNewer.Widget, "TimeSpinbuttonMinutsNewer")
-	trans.setTextToGtkObjects(&mainObjects.TimeSpinbuttonMinutsOlder.Widget, "TimeSpinbuttonMinutsOlder")
-	trans.setTextToGtkObjects(&mainObjects.TimeSpinbuttonSecondsNewer.Widget, "TimeSpinbuttonSecondsNewer")
-	trans.setTextToGtkObjects(&mainObjects.TimeSpinbuttonSecondsOlder.Widget, "TimeSpinbuttonSecondsOlder")
+	trans.setTextToGtkObjects(&mainObjects.Statusbar.Widget, "Statusbar")
 }
 // Translations structure declaration. To be used in main application.
 var translate = new(MainTranslate)
@@ -75,6 +64,7 @@ var translate = new(MainTranslate)
 // when "devMode" is set at true.
 var sts = map[string]string{
 	`no`: `No`,
+	`ok`: `Ok`,
 	`yes`: `Yes`,
 }
 
@@ -95,9 +85,9 @@ type MainTranslate struct {
 // MainTranslateNew: Initialise new translation structure and assign language file content to GtkObjects.
 // devModeActive, indicate that the new sentences must be added to previous language file.
 func MainTranslateNew(filename string, devModeActive ...bool) (mt *MainTranslate) {
+	var err error
 	mt = new(MainTranslate)
-	if _, err := os.Stat(filename); err == nil {
-		mt.read(filename)
+	if err = mt.read(filename); err == nil {
 		mt.initGtkObjectsText()
 		if len(devModeActive) != 0 {
 			if devModeActive[0] {
@@ -109,9 +99,9 @@ func MainTranslateNew(filename string, devModeActive ...bool) (mt *MainTranslate
 			}
 		}
 	} else {
-		fmt.Printf("%s\n%s\n", "Error loading language file !\nNot an error when is just creating from glade Xml or GOH project file.", err.Error())
+		fmt.Printf("%s\n%s\n", "Error loading language file !\nNot an error when you just creating from glade Xml or GOH project file.", err.Error())
 	}
-	return mt
+	return
 }
 
 // readFile: language file.
@@ -122,7 +112,7 @@ func (trans *MainTranslate) read(filename string) (err error) {
 			trans.objectsLoaded = true
 		}
 	}
-	return err
+	return
 }
 
 // Write json datas to file
@@ -134,64 +124,74 @@ func (trans *MainTranslate) write(filename string) (err error) {
 			err = ioutil.WriteFile(filename, out.Bytes(), 0644)
 		}
 	}
-	return err
+	return
 }
 
 type parsingFlags struct {
-	SkipLowerCase  bool
-	SkipEmptyLabel bool
-	SkipEmptyName  bool
-	DoBackup       bool
+	SkipLowerCase,
+	SkipEmptyLabel,
+	SkipEmptyName,
+	DoBackup bool
 }
 
 type progInfo struct {
-	Name              string
-	Version           string
-	Creat             string
-	MainObjStructName string
-	GladeXmlFilename  string
-	TranslateFilename string
+	Name,
+	Version,
+	Creat,
+	MainObjStructName,
+	GladeXmlFilename,
+	TranslateFilename,
+	ProjectRootDir,
+	GohProjFile string
 }
 
 type language struct {
-	LangNameLong string
-	LangNameShrt string
-	Author       string
-	Date         string
-	Updated      string
+	LangNameLong,
+	LangNameShrt,
+	Author,
+	Date,
+	Updated string
 	Contributors []string
 }
 
 type object struct {
-	Class         string
-	Id            string
-	Label         string
-	LabelMarkup   bool
-	LabelWrap     bool
-	Tooltip       string
+	Class,
+	Id,
+	Label,
+	Tooltip,
+	Text,
+	Uri,
+	Comment string
+	LabelMarkup,
+	LabelWrap,
 	TooltipMarkup bool
-	Text          string
-	Uri           string
-	Comment       string
-	Idx           int
+	Idx int
 }
 
 // Define available property within objects
 type propObject struct {
-	Class         string
-	Label         bool
-	LabelMarkup   bool
-	LabelWrap     bool
-	Tooltip       bool
-	TooltipMarkup bool
-	Text          bool
-	Uri           bool
+	Class string
+	Label,
+	LabelMarkup,
+	LabelWrap,
+	Tooltip,
+	TooltipMarkup,
+	Text,
+	Uri bool
 }
 
 // Property that exists for Gtk3 Object ...	(Used for Class capability)
 var propPerObjects = []propObject{
 	{Class: "GtkButton", Label: true, Tooltip: true, TooltipMarkup: true},
-	{Class: "GtkToolButton", Label: true, Tooltip: true, TooltipMarkup: true},
+	{Class: "GtkMenuButton", Label: true, Tooltip: true, TooltipMarkup: true},
+
+	// {Class: "GtkToolButton", Label: true, Tooltip: true, TooltipMarkup: true},    // Deprecated since 3.10
+	// {Class: "GtkImageMenuItem", Label: true, Tooltip: true, TooltipMarkup: true}, // Deprecated since 3.10
+
+	{Class: "GtkMenuItem", Label: true, Tooltip: true, TooltipMarkup: true},
+	{Class: "GtkCheckMenuItem", Label: true, Tooltip: true, TooltipMarkup: true},
+	{Class: "GtkRadioMenuItem", Label: true, Tooltip: true, TooltipMarkup: true},
+
 	{Class: "GtkToggleButton", Label: true, Tooltip: true, TooltipMarkup: true},
 	{Class: "GtkLabel", Label: true, LabelMarkup: true, Tooltip: true, TooltipMarkup: true, LabelWrap: true},
 	{Class: "GtkSpinButton", Tooltip: true, TooltipMarkup: true},
@@ -208,6 +208,9 @@ var propPerObjects = []propObject{
 	{Class: "GtkTreeView", Tooltip: true, TooltipMarkup: true},
 	{Class: "GtkFileChooserButton", Tooltip: true, TooltipMarkup: true},
 	{Class: "GtkTextView", Tooltip: true, TooltipMarkup: true},
+	{Class: "GtkSourceView", Tooltip: true, TooltipMarkup: true},
+	{Class: "GtkStatusbar", Tooltip: true, TooltipMarkup: true},
+	{Class: "GtkScrolledWindow", Tooltip: true, TooltipMarkup: true},
 }
 
 // setTextToGtkObjects: read translations from structure and set them to object.
@@ -239,8 +242,10 @@ func (trans *MainTranslate) setTextToGtkObjects(obj *gtk.Widget, objectId string
 					if props.Uri {
 						obj.SetProperty("uri", currObject.Uri)
 					}
+					break
 				}
 			}
+			break
 		}
 	}
 }

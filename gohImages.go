@@ -1,43 +1,38 @@
 // gohImages.go
 
-// Source file auto-generated on Wed, 02 Oct 2019 23:28:15 using Gotk3ObjHandler v1.3.8 ©2018-19 H.F.M
-
 /*
+	Source file auto-generated on Fri, 02 Apr 2021 13:10:55 using Gotk3 Objects Handler v1.7.5 ©2018-21 hfmrow
+	This software use gotk3 that is licensed under the ISC License:
+	https://github.com/gotk3/gotk3/blob/master/LICENSE
+
+	Copyright ©2018-21 H.F.M - Search Engine v1.9 github.com/hfmrow/search-engine
 	This program comes with absolutely no warranty. See the The MIT License (MIT) for details:
 	https://opensource.org/licenses/mit-license.php
 */
 
 package main
 
-/*************************************************************/
-/* This section preserve user modifications on update.      */
-/* Images declarations, used to initialize objects with it */
-/* The functions: setImage, setWinIcon and setButtonImage */
-/* accept both kind of variables: filename or []byte     */
-/* content in case of using embedded binary data. The   */
-/* variables names are the same. You can use function  */
-/* "func assetsDeclarationsUseEmbedded(bool)"         */
-/* to toggle between filenames and embedded binary.  */
-/* The "set...Image/Icon" functions could receive   */
-/* a display size if necessary or a pos. argument. */
-/**************************************************/
+/**********************************************************/
+/* This section preserve user modifications on update.   */
+/* Images declarations, used to initialize objects with */
+/* The SetPict() func, accept both kind of variables:  */
+/* filename or []byte content in case of using        */
+/* embedded binary data. The variables names are the */
+/* same. "assetsDeclarationsUseEmbedded(bool)" func */
+/* could be used to toggle between filenames and   */
+/* embedded binary type. See SetPict()            */
+/* declaration to learn more on how to use it.   */
+/************************************************/
 func assignImages() {
-	setImage(mainObjects.ImageTop, searchEngine700x48)
-	setWinIcon(mainObjects.MainWindow, find48)
-	setButtonImage(mainObjects.SearchButton, find18)
-	setButtonImage(mainObjects.SearchButtonExit, cancel18x18)
-	setButtonImage(mainObjects.SearchButtonExport, saveAll18)
-	setButtonImage(mainObjects.SearchButtonNewerThan, calendar18)
-	setButtonImage(mainObjects.SearchButtonOlderThan, calendar18)
-	setButtonImage(mainObjects.SearchButtonResetComboEntry, reset18x18)
-	setButtonImage(mainObjects.TimeButtonOkNewer, checked18x18)
-	setButtonImage(mainObjects.TimeButtonOkOlder, checked18x18)
-	setButtonImage(mainObjects.TimeButtonResetNewer, reset18x18)
-	setButtonImage(mainObjects.TimeButtonResetOlder, reset18x18)
-	setImage(mainObjects.TimeImageTopNewer, searchEngine400x27)
-	setImage(mainObjects.TimeImageTopOlder, searchEngine400x27)
-	setWinIcon(mainObjects.TimeWindowNewer, "")
-	setWinIcon(mainObjects.TimeWindowOlder, "")
+	size := 18
+	SetPict(mainObjects.ImageTop, searchEngineTop550x48)
+	SetPict(mainObjects.MainWindow, find48)
+	SetPict(mainObjects.SearchButton, searchFolder48, size)
+	SetPict(mainObjects.SearchButtonExit, logout48, size-2)
+	SetPict(mainObjects.SearchButtonExport, floppySave48, size-4)
+	SetPict(mainObjects.SearchButtonNewerThan, calendarPers48, size)
+	SetPict(mainObjects.SearchButtonOlderThan, calendarPers48, size)
+	SetPict(mainObjects.SearchButtonResetComboEntry, clearHist48, size-2)
 }
 
 /**********************************************************/
@@ -46,20 +41,20 @@ func assignImages() {
 /* bridge between the differents types used, string or */
 /* []byte, and to simply switch from one to another.  */
 /*****************************************************/
-var calendar18 interface{}         // assets/images/calendar-18.png
-var calendar48 interface{}         // assets/images/calendar-48.png
-var cancel18x18 interface{}        // assets/images/cancel-18x18.png
-var checked18x18 interface{}       // assets/images/checked-18x18.png
-var copyDocument20 interface{}     // assets/images/Copy-document-20.png
-var find18 interface{}             // assets/images/find-18.png
-var find48 interface{}             // assets/images/find-48.png
-var folderOpen20 interface{}       // assets/images/folder-open-20.png
-var globalNetwork20 interface{}    // assets/images/Global-Network-20.png
-var mainGlade interface{}          // assets/glade/main.glade
-var open18 interface{}             // assets/images/open-18.png
-var play20 interface{}             // assets/images/Play-20.png
-var reset18x18 interface{}         // assets/images/reset-18x18.png
-var saveAll18 interface{}          // assets/images/save-all-18.png
-var searchEngine400x27 interface{} // assets/images/Search-Engine-400x27.png
-var searchEngine700x48 interface{} // assets/images/Search-Engine-700x48.png
-var signError20 interface{}        // assets/images/Sign-Error-20.png
+var mainGlade interface{}             // assets/glade/main.glade
+var calendarPers48 interface{}        // assets/images/calendar-pers-48.png
+var clearHist48 interface{}           // assets/images/clear-hist-48.png
+var copyDocument20 interface{}        // assets/images/Copy-document-20.png
+var crossIcon48 interface{}           // assets/images/Cross-icon-48.png
+var find48 interface{}                // assets/images/find-48.png
+var floppySave48 interface{}          // assets/images/floppy-save-48.png
+var folder48 interface{}              // assets/images/folder-48.png
+var globalNetwork20 interface{}       // assets/images/Global-Network-20.png
+var logout48 interface{}              // assets/images/logout-48.png
+var play20 interface{}                // assets/images/Play-20.png
+var reset48 interface{}               // assets/images/reset-48.png
+var searchEngineTop370x32 interface{} // assets/images/search-engine-top-370x32.png
+var searchEngineTop550x48 interface{} // assets/images/search-engine-top-550x48.png
+var searchFolder48 interface{}        // assets/images/search-folder-48.png
+var stop48 interface{}                // assets/images/Stop-48.png
+var tickIcon48 interface{}            // assets/images/Tick-icon-48.png

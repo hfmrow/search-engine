@@ -3,7 +3,8 @@
 package gtk3Import
 
 import (
-	"fmt"
+	"errors"
+	"log"
 	"os"
 	"path/filepath"
 
@@ -18,13 +19,17 @@ var FileChooserAction = map[string]gtk.FileChooserAction{
 	"select-folder": gtk.FILE_CHOOSER_ACTION_SELECT_FOLDER,
 	"create-folder": gtk.FILE_CHOOSER_ACTION_CREATE_FOLDER,
 	"open":          gtk.FILE_CHOOSER_ACTION_OPEN,
+	"open-entry":    gtk.FILE_CHOOSER_ACTION_SAVE, // Open with 'entry' like in 'save' dialog
 	"save":          gtk.FILE_CHOOSER_ACTION_SAVE,
 }
+
+var UserAbortError = errors.New("Action aborted by user !")
 
 // FileChooser: Display a file chooser dialog.
 // dlgType: "open", "save", "create-folder", "select-folder" as dlgType.
 // title = "": auto choice based on dialog type.
 // options: 1-keepAbove, 2-enablePreviewImages, 3-setModal, 4-askOverwrite
+// Default:	1- true, 2- false, 3- true, 4- true
 func FileChooser(window *gtk.Window, dlgType, title, filename string, options ...bool) (outFilename string, result bool, err error) {
 	var preview, folder bool
 	var fileChooser *gtk.FileChooserDialog
@@ -50,14 +55,18 @@ func FileChooser(window *gtk.Window, dlgType, title, filename string, options ..
 
 	if len(title) == 0 {
 		switch dlgType {
+
 		case "create-folder":
 			title = "Create folder"
 			folder = true
+
 		case "select-folder":
 			title = "Select directory"
 			folder = true
-		case "open":
+
+		case "open", "open-entry":
 			title = "Select file to open"
+
 		case "save":
 			title = "Select file to save"
 		}
@@ -79,7 +88,7 @@ func FileChooser(window *gtk.Window, dlgType, title, filename string, options ..
 						fileChooser.SetPreviewWidgetActive(true)
 						if pixbuf.GetWidth() > 640 || pixbuf.GetHeight() > 480 {
 							if pixbuf, err = gdk.PixbufNewFromFileAtScale(fc.GetFilename(), 200, 200, true); err != nil {
-								fmt.Printf("Image '%s' cannot be loaded, got error: %s", fc.GetFilename(), err.Error())
+								log.Fatalf("Image '%s' cannot be loaded, got error: %s", fc.GetFilename(), err.Error())
 							}
 						}
 						previewImage.SetFromPixbuf(pixbuf)
@@ -90,6 +99,8 @@ func FileChooser(window *gtk.Window, dlgType, title, filename string, options ..
 			})
 		}
 	}
+
+	fileChooser.SetFilename(filename)
 
 	if dlgType == "save" {
 		fileChooser.SetCurrentName(filepath.Base(filename))
@@ -106,10 +117,35 @@ func FileChooser(window *gtk.Window, dlgType, title, filename string, options ..
 	fileChooser.SetSkipTaskbarHint(true)
 	fileChooser.SetKeepAbove(kpAbove)
 
-	switch int(fileChooser.Run()) {
-	case -3:
+	if dlgType == "open-entry" {
+		fileChooser.SetDoOverwriteConfirmation(false)
+		fileChooser.SetCurrentName(filepath.Base(filename))
+	}
+
+	// fmt.Println(gtk.RESPONSE_ACCEPT)       //-3
+	// fmt.Println(gtk.RESPONSE_DELETE_EVENT) //-4
+	// fmt.Println(gtk.RESPONSE_OK)           //-5
+	// fmt.Println(gtk.RESPONSE_CANCEL)       //-6
+	// fmt.Println(gtk.RESPONSE_CLOSE)        //-7
+	// fmt.Println(gtk.RESPONSE_YES)          //-8
+
+	resp := fileChooser.Run()
+
+	switch resp {
+	case gtk.RESPONSE_CANCEL, gtk.RESPONSE_DELETE_EVENT:
+
+		result = false
+		err = UserAbortError
+	case gtk.RESPONSE_ACCEPT:
+
 		result = true
 		outFilename = fileChooser.GetFilename()
+
+		if dlgType == "open-entry" {
+			if _, err = os.Stat(outFilename); err != nil {
+				result = false
+			}
+		}
 	}
 
 	fileChooser.Destroy()

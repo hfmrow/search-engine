@@ -9,12 +9,13 @@ package main
 import (
 	"errors"
 	"fmt"
-	"strings"
+	"io/ioutil"
+	"log"
+	"os"
+	"time"
 
-	"github.com/gotk3/gotk3/gdk"
 	"github.com/gotk3/gotk3/gtk"
 
-	glfs "github.com/hfmrow/genLib/files"
 	glsg "github.com/hfmrow/genLib/strings"
 	gidgcr "github.com/hfmrow/gtk3Import/dialog/chooser"
 )
@@ -26,26 +27,7 @@ func SearchFilechooserbuttonFileSet() {
 
 // Let's go search
 func SearchButtonClicked() {
-	if err := fillListstore(); err != nil {
-		DialogMessage(mainObjects.MainWindow, "error", "Error occured during search", "\n\n"+err.Error(), "", "Ok")
-	}
-}
-
-// SearchTreeviewButtonPressEvent
-func SearchTreeviewButtonPressEvent(tw *gtk.TreeView, event *gdk.Event) bool {
-	eventButton := gdk.EventButtonNewFromEvent(event)
-	selection, err := tw.GetSelection()
-	Check(err) // Is there anything out there ?
-	if selection.CountSelectedRows() > 0 && err == nil {
-		if eventButton.Button() == 3 {
-			mainObjects.popUpMenu.PopupAtPointer(event)
-
-			// return true to stop propagate event, so nothing get selected on RMB click
-			return true
-		}
-	}
-	// return false to propagate event
-	return false
+	fillListstore()
 }
 
 // Save results as text file
@@ -53,41 +35,111 @@ func SearchButtonExportClicked() {
 	var err error
 	var ok bool
 	var filename string
+	var tmpFilesList string
 
-	if len(mainOptions.foundFilesList) != 0 {
+	if len(storeFoundFiles) != 0 {
 		filename, ok, err = gidgcr.FileChooser(mainObjects.MainWindow, "save", "", "")
 		if ok {
-			err = glfs.WriteFile(filename,
-				[]byte(strings.Join(mainOptions.foundFilesList, glsg.GetOsLineEnd())))
+			for _, file := range storeFoundFiles {
+				tmpFilesList += file.FilePath + glsg.GetOsLineEnd()
+			}
+			err = ioutil.WriteFile(filename, []byte(tmpFilesList), os.ModePerm)
 		} else {
 			if len(filename) != 0 && ok {
 				err = errors.New("Error writing file ...")
 			}
 		}
 	} else {
-		err = errors.New("Nothing to save ...")
+		err = errors.New("There is nothing to export ...")
 	}
 	if err != nil {
 		DialogMessage(mainObjects.MainWindow, "info", "Attention !!!", "\nYou got a problem:\n\n"+err.Error(), "", "Ok")
 	}
 }
 
+// TODO find a way to make it working ...
+func timeControl(older, newer time.Time) (out bool) {
+	// var mess = DialogMessage(mainObjects.MainWindow, "error", "Error date selection", "\n\nDate time selection will never retrieve any file.", "", "Ok")
+	// var blankTime time.Time
+	// if newer != blankTime || older != blankTime {
+	// 	switch {
+	// 	case newer.After(older):
+	// 		mess()
+	// 		return false
+	// 	case time.Now().After(older):
+	// 		return true
+	// 	case newer.After(time.Now()):
+	// 		mess()
+	// 		return false
+	// 	}
+	// } else {
+	// 	return true
+	// }
+	// mess()
+	return true
+}
+
+// initCalData: Init calendar
+func initCalData() {
+	mainOptions.calDataNewerThan = gidgcr.CalendarDataNew()
+	mainOptions.calDataNewerThan.Init() // Set values to nul. is needed for files search
+
+	mainOptions.calDataOlderThan = gidgcr.CalendarDataNew()
+	mainOptions.calDataOlderThan.Init() // Set values to nul. is needed for files search
+}
+
 // Handle SearchButtonNewerThanClicked
 func SearchButtonNewerThanClicked() {
-	displayTimeWin(mainObjects.TimeWindowNewer, "Choose date time for newer than files")
-	setCal(mainObjects.TimeCalendarNewer, &mainOptions.searchNewerThan,
-		mainObjects.TimeSpinbuttonHourNewer,
-		mainObjects.TimeSpinbuttonMinutsNewer,
-		mainObjects.TimeSpinbuttonSecondsNewer)
+
+	if mainOptions.calDataNewerThan.ToTime() == mainOptions.calDataNewerThan.BlankTime {
+		mainOptions.calDataNewerThan.Init(time.Now())
+	}
+	mainOptions.calendar.TitleWindow = "Choose newer than date time"
+	mainOptions.calendar.Result = mainOptions.calDataNewerThan
+	ok, err := mainOptions.calendar.Run()
+	if err != nil {
+		log.Fatalf("SearchButtonNewerThanClicked: %s\n", err.Error())
+	}
+	if ok && timeControl(mainOptions.calDataOlderThan.ToTime(), mainOptions.calDataNewerThan.ToTime()) {
+		mainOptions.calDataNewerThan = mainOptions.calendar.Result
+		setCalendarbuttonLabel(mainObjects.SearchButtonNewerThan, mainOptions.calDataNewerThan)
+	} else {
+		mainOptions.calDataNewerThan.Init()
+		mainObjects.SearchButtonNewerThan.SetLabel(origLabelNT)
+	}
+	fmt.Println(mainOptions.calDataNewerThan.ToLayout())
+}
+
+// setCalendarbuttonLabel: fill label of desined button with content of CalendarData struct
+func setCalendarbuttonLabel(button *gtk.Button, calData *gidgcr.CalendarData) {
+	button.SetLabel(fmt.Sprintf("%4d-%02d-%02d %02d:%02d:%02d",
+		calData.Year,
+		calData.Month,
+		calData.Day,
+		calData.Hour,
+		calData.Min,
+		calData.Sec))
 }
 
 // Handle SearchButtonOlderThanClicked
 func SearchButtonOlderThanClicked() {
-	displayTimeWin(mainObjects.TimeWindowOlder, "Choose date time for older than files")
-	setCal(mainObjects.TimeCalendarOlder, &mainOptions.searchOlderThan,
-		mainObjects.TimeSpinbuttonHourOlder,
-		mainObjects.TimeSpinbuttonMinutsOlder,
-		mainObjects.TimeSpinbuttonSecondsOlder)
+
+	if mainOptions.calDataOlderThan.ToTime() == mainOptions.calDataOlderThan.BlankTime {
+		mainOptions.calDataOlderThan.Init(time.Now())
+	}
+	mainOptions.calendar.TitleWindow = "Choose older than date time"
+	mainOptions.calendar.Result = mainOptions.calDataOlderThan
+	ok, err := mainOptions.calendar.Run()
+	if err != nil {
+		log.Fatalf("SearchButtonOlderThanClicked: %s\n", err.Error())
+	}
+	if ok && timeControl(mainOptions.calDataOlderThan.ToTime(), mainOptions.calDataNewerThan.ToTime()) {
+		setCalendarbuttonLabel(mainObjects.SearchButtonOlderThan, mainOptions.calDataOlderThan)
+	} else {
+		mainOptions.calDataOlderThan.Init()
+		mainObjects.SearchButtonOlderThan.SetLabel(origLabelOT)
+	}
+	fmt.Println(mainOptions.calDataOlderThan.ToLayout())
 }
 
 //Switch visibility when Regex behind used
@@ -125,14 +177,23 @@ func SearchButtonResetComboEntryClicked() {
 
 func SearchComboboxTextTypeChanged() {
 	if mainOptions.UpdateOnChanges {
-		if err := fillListstore(); err != nil {
-			DialogMessage(mainObjects.MainWindow, "error", "Error occured during search", "\n\n"+err.Error(), "", "Ok")
-		}
+		fillListstore()
 	}
 }
 
-func SearchComboboxTextDateTypeChanged() {
-	if mainOptions.UpdateOnChanges {
-		doDisplay()
+func ComboboxTextGenericChanged() {
+	doDisplay()
+}
+
+// genericHideWindow: Signal handler delete_event (hidding window)
+func genericHideWindow(w *gtk.Window) bool {
+	if w.GetVisible() {
+		w.Hide()
 	}
+	return true
+}
+
+// TopImageEventboxClicked: display Aboutbox
+func TopImageEventboxClicked() {
+	mainOptions.About.Show()
 }

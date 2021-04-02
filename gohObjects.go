@@ -1,8 +1,11 @@
 // gohObjects.go
 
-// Source file auto-generated on Wed, 02 Oct 2019 23:28:15 using Gotk3ObjHandler v1.3.8 ©2018-19 H.F.M
-
 /*
+	Source file auto-generated on Fri, 02 Apr 2021 13:10:55 using Gotk3 Objects Handler v1.7.5 ©2018-21 hfmrow
+	This software use gotk3 that is licensed under the ISC License:
+	https://github.com/gotk3/gotk3/blob/master/LICENSE
+
+	Copyright ©2018-21 H.F.M - Search Engine v1.9 github.com/hfmrow/search-engine
 	This program comes with absolutely no warranty. See the The MIT License (MIT) for details:
 	https://opensource.org/licenses/mit-license.php
 */
@@ -44,6 +47,7 @@ type MainControlsObj struct {
 	SearchCheckbuttonWordOr                *gtk.CheckButton
 	SearchComboboxTextAnd                  *gtk.ComboBoxText
 	SearchComboboxTextDateType             *gtk.ComboBoxText
+	SearchComboboxTextDateZone             *gtk.ComboBoxText
 	SearchComboboxTextEntryAnd             *gtk.Entry
 	SearchComboboxTextEntryNot             *gtk.Entry
 	SearchComboboxTextEntryOr              *gtk.Entry
@@ -55,22 +59,6 @@ type MainControlsObj struct {
 	SearchTreeview                         *gtk.TreeView
 	SearchTreeviewSelection                *gtk.TreeSelection
 	Statusbar                              *gtk.Statusbar
-	TimeButtonOkNewer                      *gtk.Button
-	TimeButtonOkOlder                      *gtk.Button
-	TimeButtonResetNewer                   *gtk.Button
-	TimeButtonResetOlder                   *gtk.Button
-	TimeCalendarNewer                      *gtk.Calendar
-	TimeCalendarOlder                      *gtk.Calendar
-	TimeImageTopNewer                      *gtk.Image
-	TimeImageTopOlder                      *gtk.Image
-	TimeSpinbuttonHourNewer                *gtk.SpinButton
-	TimeSpinbuttonHourOlder                *gtk.SpinButton
-	TimeSpinbuttonMinutsNewer              *gtk.SpinButton
-	TimeSpinbuttonMinutsOlder              *gtk.SpinButton
-	TimeSpinbuttonSecondsNewer             *gtk.SpinButton
-	TimeSpinbuttonSecondsOlder             *gtk.SpinButton
-	TimeWindowNewer                        *gtk.Window
-	TimeWindowOlder                        *gtk.Window
 	TopImageEventbox                       *gtk.EventBox
 }
 
@@ -101,6 +89,7 @@ func gladeObjParser() {
 	mainObjects.SearchCheckbuttonWordOr = loadObject("SearchCheckbuttonWordOr").(*gtk.CheckButton)
 	mainObjects.SearchComboboxTextAnd = loadObject("SearchComboboxTextAnd").(*gtk.ComboBoxText)
 	mainObjects.SearchComboboxTextDateType = loadObject("SearchComboboxTextDateType").(*gtk.ComboBoxText)
+	mainObjects.SearchComboboxTextDateZone = loadObject("SearchComboboxTextDateZone").(*gtk.ComboBoxText)
 	mainObjects.SearchComboboxTextEntryAnd = loadObject("SearchComboboxTextEntryAnd").(*gtk.Entry)
 	mainObjects.SearchComboboxTextEntryNot = loadObject("SearchComboboxTextEntryNot").(*gtk.Entry)
 	mainObjects.SearchComboboxTextEntryOr = loadObject("SearchComboboxTextEntryOr").(*gtk.Entry)
@@ -112,81 +101,5 @@ func gladeObjParser() {
 	mainObjects.SearchTreeview = loadObject("SearchTreeview").(*gtk.TreeView)
 	mainObjects.SearchTreeviewSelection = loadObject("SearchTreeviewSelection").(*gtk.TreeSelection)
 	mainObjects.Statusbar = loadObject("Statusbar").(*gtk.Statusbar)
-	mainObjects.TimeButtonOkNewer = loadObject("TimeButtonOkNewer").(*gtk.Button)
-	mainObjects.TimeButtonOkOlder = loadObject("TimeButtonOkOlder").(*gtk.Button)
-	mainObjects.TimeButtonResetNewer = loadObject("TimeButtonResetNewer").(*gtk.Button)
-	mainObjects.TimeButtonResetOlder = loadObject("TimeButtonResetOlder").(*gtk.Button)
-	mainObjects.TimeCalendarNewer = loadObject("TimeCalendarNewer").(*gtk.Calendar)
-	mainObjects.TimeCalendarOlder = loadObject("TimeCalendarOlder").(*gtk.Calendar)
-	mainObjects.TimeImageTopNewer = loadObject("TimeImageTopNewer").(*gtk.Image)
-	mainObjects.TimeImageTopOlder = loadObject("TimeImageTopOlder").(*gtk.Image)
-	mainObjects.TimeSpinbuttonHourNewer = loadObject("TimeSpinbuttonHourNewer").(*gtk.SpinButton)
-	mainObjects.TimeSpinbuttonHourOlder = loadObject("TimeSpinbuttonHourOlder").(*gtk.SpinButton)
-	mainObjects.TimeSpinbuttonMinutsNewer = loadObject("TimeSpinbuttonMinutsNewer").(*gtk.SpinButton)
-	mainObjects.TimeSpinbuttonMinutsOlder = loadObject("TimeSpinbuttonMinutsOlder").(*gtk.SpinButton)
-	mainObjects.TimeSpinbuttonSecondsNewer = loadObject("TimeSpinbuttonSecondsNewer").(*gtk.SpinButton)
-	mainObjects.TimeSpinbuttonSecondsOlder = loadObject("TimeSpinbuttonSecondsOlder").(*gtk.SpinButton)
-	mainObjects.TimeWindowNewer = loadObject("TimeWindowNewer").(*gtk.Window)
-	mainObjects.TimeWindowOlder = loadObject("TimeWindowOlder").(*gtk.Window)
 	mainObjects.TopImageEventbox = loadObject("TopImageEventbox").(*gtk.EventBox)
-
-}
-
-
-
-/*************************************/
-/* GtkObjects Widget naming. Usualy */
-/* used in css to identify objects */
-/**********************************/
-func widgetNaming() {
-	mainObjects.ImageTop.SetName("ImageTop")
-	mainObjects.MainWindow.SetName("MainWindow")
-	mainObjects.SearchButton.SetName("SearchButton")
-	mainObjects.SearchButtonExit.SetName("SearchButtonExit")
-	mainObjects.SearchButtonExport.SetName("SearchButtonExport")
-	mainObjects.SearchButtonNewerThan.SetName("SearchButtonNewerThan")
-	mainObjects.SearchButtonOlderThan.SetName("SearchButtonOlderThan")
-	mainObjects.SearchButtonResetComboEntry.SetName("SearchButtonResetComboEntry")
-	mainObjects.SearchCheckbuttonCaseSensitive.SetName("SearchCheckbuttonCaseSensitive")
-	mainObjects.SearchCheckbuttonCharClasses.SetName("SearchCheckbuttonCharClasses")
-	mainObjects.SearchCheckbuttonCharClassesStrictMode.SetName("SearchCheckbuttonCharClassesStrictMode")
-	mainObjects.SearchCheckbuttonFollowSL.SetName("SearchCheckbuttonFollowSL")
-	mainObjects.SearchCheckbuttonRegex.SetName("SearchCheckbuttonRegex")
-	mainObjects.SearchCheckbuttonSplitedAnd.SetName("SearchCheckbuttonSplitedAnd")
-	mainObjects.SearchCheckbuttonSplitedNot.SetName("SearchCheckbuttonSplitedNot")
-	mainObjects.SearchCheckbuttonSplitedOr.SetName("SearchCheckbuttonSplitedOr")
-	mainObjects.SearchCheckbuttonWildCard.SetName("SearchCheckbuttonWildCard")
-	mainObjects.SearchCheckbuttonWordAnd.SetName("SearchCheckbuttonWordAnd")
-	mainObjects.SearchCheckbuttonWordNot.SetName("SearchCheckbuttonWordNot")
-	mainObjects.SearchCheckbuttonWordOr.SetName("SearchCheckbuttonWordOr")
-	mainObjects.SearchComboboxTextAnd.SetName("SearchComboboxTextAnd")
-	mainObjects.SearchComboboxTextDateType.SetName("SearchComboboxTextDateType")
-	mainObjects.SearchComboboxTextEntryAnd.SetName("SearchComboboxTextEntryAnd")
-	mainObjects.SearchComboboxTextEntryNot.SetName("SearchComboboxTextEntryNot")
-	mainObjects.SearchComboboxTextEntryOr.SetName("SearchComboboxTextEntryOr")
-	mainObjects.SearchComboboxTextNot.SetName("SearchComboboxTextNot")
-	mainObjects.SearchComboboxTextOr.SetName("SearchComboboxTextOr")
-	mainObjects.SearchComboboxTextType.SetName("SearchComboboxTextType")
-	mainObjects.SearchFilechooserbutton.SetName("SearchFilechooserbutton")
-	mainObjects.SearchSpinbuttonDepth.SetName("SearchSpinbuttonDepth")
-	mainObjects.SearchTreeview.SetName("SearchTreeview")
-	mainObjects.Statusbar.SetName("Statusbar")
-	mainObjects.TimeButtonOkNewer.SetName("TimeButtonOkNewer")
-	mainObjects.TimeButtonOkOlder.SetName("TimeButtonOkOlder")
-	mainObjects.TimeButtonResetNewer.SetName("TimeButtonResetNewer")
-	mainObjects.TimeButtonResetOlder.SetName("TimeButtonResetOlder")
-	mainObjects.TimeCalendarNewer.SetName("TimeCalendarNewer")
-	mainObjects.TimeCalendarOlder.SetName("TimeCalendarOlder")
-	mainObjects.TimeImageTopNewer.SetName("TimeImageTopNewer")
-	mainObjects.TimeImageTopOlder.SetName("TimeImageTopOlder")
-	mainObjects.TimeSpinbuttonHourNewer.SetName("TimeSpinbuttonHourNewer")
-	mainObjects.TimeSpinbuttonHourOlder.SetName("TimeSpinbuttonHourOlder")
-	mainObjects.TimeSpinbuttonMinutsNewer.SetName("TimeSpinbuttonMinutsNewer")
-	mainObjects.TimeSpinbuttonMinutsOlder.SetName("TimeSpinbuttonMinutsOlder")
-	mainObjects.TimeSpinbuttonSecondsNewer.SetName("TimeSpinbuttonSecondsNewer")
-	mainObjects.TimeSpinbuttonSecondsOlder.SetName("TimeSpinbuttonSecondsOlder")
-	mainObjects.TimeWindowNewer.SetName("TimeWindowNewer")
-	mainObjects.TimeWindowOlder.SetName("TimeWindowOlder")
-	mainObjects.TopImageEventbox.SetName("TopImageEventbox")
-
 }

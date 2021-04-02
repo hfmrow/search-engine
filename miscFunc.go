@@ -21,12 +21,21 @@ import (
 // initTreeview
 func initTreeview() {
 	var err error
-	/* Initialiste liststore Columns */
+	/* Init liststore Columns */
 	if tvs, err = gitw.TreeViewStructureNew(mainObjects.SearchTreeview, true, false); err == nil {
-		for _, col := range columnsNames {
-			tvs.AddColumn(col[0], col[1], true, true, true, true, true, true)
+		tvs.AddColumns(columnsNames, true, true, true, true, true, true)
+
+		tvs.SelectionChangedFunc = updateStatusbar
+
+		if err = tvs.StoreSetup(new(gtk.ListStore)); err == nil {
+
+			// Assign sorted column (col 1 will be sorted using values of col 5)
+			tvs.Columns[columnsMap["size"]].Column.SetSortColumnID(columnsMap["sizeSort"])
+			tvs.Columns[columnsMap["time"]].Column.SetSortColumnID(columnsMap["dateSort"])
+
+			// Callback function for selection "changed" signal.
+			tvs.SelectionChangedFunc = updateStatusbar
 		}
-		err = tvs.StoreSetup(new(gtk.ListStore))
 	}
 	if err != nil {
 		Check(err)
@@ -38,10 +47,10 @@ func updateStatusbar() {
 	statusbar.Set(fmt.Sprintf("%d files scanned", filesScanned), 0)
 	statusbar.Set(fmt.Sprintf("%d", tvs.CountRows()), 1)
 	statusbar.Set(fmt.Sprintf("%d", tvs.Selection.CountSelectedRows()), 2)
-	// statusbar.Set(glsg.TruncatePath(mainOptions.LastDirectory, 3), 3)
-	if len(timer.Results) > 1 {
-		statusbar.Set(fmt.Sprintf("%dm %ds %dms", timer.NumTime[0].Min, timer.NumTime[0].Sec, timer.NumTime[0].Ms), 4)
-		statusbar.Set(fmt.Sprintf("%dm %ds %dms", timer.NumTime[1].Min, timer.NumTime[1].Sec, timer.NumTime[1].Ms), 5)
+
+	if len(timer.Lapses) > 1 {
+		statusbar.Set(fmt.Sprintf("%dm %ds %dms", timer.Lapses[0].Min, timer.Lapses[0].Sec, timer.Lapses[0].Ms), 4)
+		statusbar.Set(fmt.Sprintf("%dm %ds %dms", timer.Lapses[1].Min, timer.Lapses[1].Sec, timer.Lapses[1].Ms), 5)
 	}
 	titlebar.Update([]string{glsg.TruncatePath(mainOptions.LastDirectory, 3)})
 }
@@ -60,12 +69,12 @@ func cmdLineParser() {
 	}
 	name := filepath.Base(os.Args[0])
 	fmt.Printf("%s %s %s %s\n%s\n%s\n\nUsage: %s \"PathToScan\"\n",
-		mainOptions.AboutOptions.AppName,
-		mainOptions.AboutOptions.AppVers,
-		mainOptions.AboutOptions.YearCreat,
-		mainOptions.AboutOptions.AppCreats,
-		mainOptions.AboutOptions.LicenseShort,
-		mainOptions.AboutOptions.Description,
+		mainOptions.About.AppName,
+		mainOptions.About.AppVers,
+		mainOptions.About.YearCreat,
+		mainOptions.About.AppCreats,
+		mainOptions.About.LicenseShort,
+		mainOptions.About.Description,
 		name)
 }
 
@@ -83,24 +92,6 @@ func initSpinButtons() {
 	var ad *gtk.Adjustment
 	if ad, err = gtk.AdjustmentNew(-1, -1, 100, 1, 0, 0); err == nil {
 		mainObjects.SearchSpinbuttonDepth.Configure(ad, 1, 0)
-		if ad, err = gtk.AdjustmentNew(0, 0, 23, 1, 0, 0); err == nil {
-			mainObjects.TimeSpinbuttonHourNewer.Configure(ad, 1, 0)
-			if ad, err = gtk.AdjustmentNew(0, 0, 59, 1, 0, 0); err == nil {
-				mainObjects.TimeSpinbuttonHourOlder.Configure(ad, 1, 0)
-				if ad, err = gtk.AdjustmentNew(0, 0, 59, 1, 0, 0); err == nil {
-					mainObjects.TimeSpinbuttonMinutsNewer.Configure(ad, 1, 0)
-					if ad, err = gtk.AdjustmentNew(0, 0, 23, 1, 0, 0); err == nil {
-						mainObjects.TimeSpinbuttonMinutsOlder.Configure(ad, 1, 0)
-						if ad, err = gtk.AdjustmentNew(0, 0, 59, 1, 0, 0); err == nil {
-							mainObjects.TimeSpinbuttonSecondsNewer.Configure(ad, 1, 0)
-							if ad, err = gtk.AdjustmentNew(0, 0, 59, 1, 0, 0); err == nil {
-								mainObjects.TimeSpinbuttonSecondsOlder.Configure(ad, 1, 0)
-							}
-						}
-					}
-				}
-			}
-		}
 	}
 	if err != nil {
 		Check(err)

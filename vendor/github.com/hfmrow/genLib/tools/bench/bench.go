@@ -1,89 +1,127 @@
 // bench.go
 
 /*
-  Measuring lapse (may be multiples) between operations.
+	Copyright ©2018-19 H.F.M
+	This program comes with absolutely no warranty. See the The MIT License (MIT) for details:
+	https://opensource.org/licenses/mit-license.php
+
+	Measuring lapse (may be multiples) between operations.
 
 Usage:
-		bench := BenchNew(true) // true mean we want display results at Stop().
+		bench := BenchNew(true) // true means we want display results at Stop().
 		bench.Lapse("first lapse")
 		// Doing something ...
 		bench.Lapse("Nth lapse")
 		// Doing another thing ...
 		bench.Stop                 // Display results
-		fmt.Println(bench.Average) // Mean time
-		fmt.Println(bench.NumTime) // numeric sliced version of results ...
 */
 
 package bench
 
 import (
 	"fmt"
+	"strings"
 	"time"
 )
 
 type Bench struct {
-	lapse   []time.Time
-	label   []string
-	totalNs int64
-	Results []string
-	Average string
-	Display bool
-	NumTime []numeric
+	Lapses  []lapse
+	Average lapse
+	Total   lapse
+
+	lbl     string
+	display bool
 }
 
-func BenchNew(showResults bool) (bench *Bench) {
+// BenchNew: default showResult = true
+func BenchNew(showResults ...bool) (bench *Bench) {
 	bench = new(Bench)
-	bench.Display = showResults
+	bench.display = true
+	if len(showResults) > 0 {
+		bench.display = showResults[0]
+	}
+	return
+}
+func (b *Bench) Start(label ...string) {
+	b.Lapse(label...)
+}
+func (b *Bench) Lapse(label ...string) {
+	b.lbl = "Start"
+
+	if len(label) == 0 {
+		b.lbl = fmt.Sprintf("%d", len(b.Lapses))
+	} else {
+		b.lbl = strings.Join(label, " ")
+	}
+
+	b.Lapses = append(b.Lapses, lapse{
+		Time:  time.Now(),
+		Label: b.lbl})
+}
+
+func (b *Bench) NanoConv(nano int64) (min, sec, ms, ns int64) {
+	min = nano / 60000000000
+	minr := nano % 60000000000
+	sec = minr / 1000000000
+	secr := minr % 1000000000
+	ms = secr / 1000000
+	ns = secr % 1000000
 	return
 }
 
-type numeric struct {
-	Min, Sec, Ms, Ns int64
-}
-
-func (b *Bench) Lapse(label ...string) {
-	b.lapse = append(b.lapse, time.Now())
-	if len(label) == 0 {
-		label = append(label, fmt.Sprintf("%d", len(b.lapse)))
-	}
-	b.label = append(b.label, label...)
-}
-
 func (b *Bench) Stop() {
-	b.Lapse("Total")
-	lapseCount := len(b.lapse) - 1
-	b.Results = b.Results[:0]
-	if lapseCount > 1 {
-		for idx := 0; idx < len(b.lapse)-1; idx++ {
-			b.calculateLapse(idx, b.lapse[idx], b.lapse[idx+1])
+	b.Lapse()
+	var means, nano int64
+	nextLbl, tmpNextLbl := b.Lapses[0].Label, ""
+	for t := 1; t < len(b.Lapses); t++ { // Lapses calculation
+		tmpNextLbl = b.Lapses[t].Label //
+		b.Lapses[t].Label = nextLbl    // Switching labels
+		nextLbl = tmpNextLbl           //
+		nano = b.Lapses[t].Time.Sub(b.Lapses[t-1].Time).Nanoseconds()
+		means += nano
+		b.Lapses[t].toLapse(nano)
+	}
+
+	b.Lapses = b.Lapses[1:]
+	if len(b.Lapses)-1 > 0 { // Average calculation
+
+		b.Average.toLapse(means / int64(len(b.Lapses)))
+		b.Average.Label = "Average"
+
+		b.Total.toLapse(means)
+		b.Total.Label = "Total"
+	}
+
+	if b.display {
+		b.disp()
+	}
+}
+
+func (b *Bench) Reset() {
+	b.Lapses = b.Lapses[:0]
+}
+
+func (b *Bench) disp() {
+	if len(b.Lapses) > 1 {
+		for _, lps := range b.Lapses {
+			fmt.Printf("%s: %s\n", lps.Label, lps.String)
 		}
+	} else {
+		fmt.Printf("%s\n", b.Lapses[0].String)
 	}
-	b.calculateLapse(lapseCount, b.lapse[0], b.lapse[lapseCount])
-
-	m, s, ms, ns := b.getMSmsnano(b.totalNs / int64(len(b.lapse)))
-	b.Average = fmt.Sprintf("%v m, %v s, %v ms, %v ns", m, s, ms, ns)
-
-	b.totalNs = 0
-	b.label = b.label[:0]
-	b.lapse = b.lapse[:0]
 }
 
-func (b *Bench) getMSmsnano(diff int64) (min, sec, ms, ns int64) {
-	min = (diff / 1000000000) / 60
-	sec = diff/1000000000 - (min * 60)
-	ms = (diff / 1000000) - (sec * 1000)
-	ns = diff - ((diff / 1000000) * 1000000)
-	return min, sec, ms, ns
+type lapse struct {
+	Time                       time.Time
+	Elapsed                    time.Time
+	Min, Sec, Ms, Ns           int64
+	StringShort, String, Label string
 }
 
-func (b *Bench) calculateLapse(count int, start, stop time.Time) {
-	diff := stop.Sub(start).Nanoseconds()
-	m, s, ms, ns := b.getMSmsnano(diff)
-	b.NumTime = append(b.NumTime, numeric{Min: m, Sec: s, Ms: ms, Ns: ns})
-	b.Results = append(b.Results, fmt.Sprintf("%s: %v m, %v s, %v ms, %v ns",
-		b.label[count], m, s, ms, ns))
-	b.totalNs += diff
-	if b.Display {
-		fmt.Println(b.Results[len(b.Results)-1])
-	}
+func (l *lapse) toLapse(nano int64) {
+	b := new(Bench)
+	l.Elapsed = time.Unix(0, nano)
+	l.Min, l.Sec, l.Ms, l.Ns = b.NanoConv(nano)
+	l.StringShort = fmt.Sprintf("%dm %d.%ds", l.Min, l.Sec, l.Ms)
+	l.String = fmt.Sprintf("%dm %ds %dms %dns", l.Min, l.Sec, l.Ms, l.Ns)
 }

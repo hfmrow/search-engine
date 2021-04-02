@@ -1,8 +1,11 @@
 // gohOptions.go
 
-// Source file auto-generated on Wed, 02 Oct 2019 17:33:10 using Gotk3ObjHandler v1.3.8 ©2018-19 H.F.M
-
 /*
+	Source file auto-generated on Fri, 02 Apr 2021 13:10:55 using Gotk3 Objects Handler v1.7.5 ©2018-21 hfmrow
+	This software use gotk3 that is licensed under the ISC License:
+	https://github.com/gotk3/gotk3/blob/master/LICENSE
+
+	Copyright ©2018-21 H.F.M - Search Engine v1.9 github.com/hfmrow/search-engine
 	This program comes with absolutely no warranty. See the The MIT License (MIT) for details:
 	https://opensource.org/licenses/mit-license.php
 */
@@ -13,60 +16,82 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
+	"os"
 
+	glfsff "github.com/hfmrow/genLib/files/findFiles"
 	gltsbh "github.com/hfmrow/genLib/tools/bench"
 	gltses "github.com/hfmrow/genLib/tools/errors"
 
 	gidg "github.com/hfmrow/gtk3Import/dialog"
-	gidgat "github.com/hfmrow/gtk3Import/dialog/about"
+	gidgcr "github.com/hfmrow/gtk3Import/dialog/chooser"
 	gimc "github.com/hfmrow/gtk3Import/misc"
 	gitw "github.com/hfmrow/gtk3Import/treeview"
-	// gidgcr "github.com/hfmrow/gtk3Import/dialog/chooser"
 )
 
 // App infos
-var Name = "SearchEngine"
-var Vers = "v1.8.5"
+var Name = "Search Engine"
+var Vers = "v1.9"
 var Descr = "This program is designed to search files over directory,\nsubdirectory, and retrieving information based on\ndate, type, patterns contained in name."
 var Creat = "H.F.M"
-var YearCreat = "2018-19"
+var YearCreat = "2018-21"
 var LicenseShort = "This program comes with absolutely no warranty.\nSee the The MIT License (MIT) for details:\nhttps://opensource.org/licenses/mit-license.php"
 var LicenseAbrv = "License (MIT)"
-var Repository = "github.com/hfmrow/searchEngine"
+var Repository = "github.com/hfmrow/search-engine"
 
 // Vars declarations
-var absoluteRealPath, optFilename = getAbsRealPath()
-var mainOptions *MainOpt
-var devMode bool
-var tempDir string
-var doTempDir bool
-var namingWidget bool
+var (
+	maintitle,
+	tempDir,
+	absoluteRealPath,
+	optFilename string
 
-var errNoSelection = errors.New("There is no selection currently.")
-var tvs *gitw.TreeViewStructure
-var columnsNames = [][]string{{"Name", "text"}, {"Size", "text"}, {"Type", "text"}, {"Time", "text"}, {"Path", "text"}}
-var timer = gltsbh.BenchNew(false)
-var statusbar = gimc.StatusBar{}
-var clipboard = gimc.Clipboard{}
-var titlebar *gimc.TitleBar
-var maintitle string
-var filesScanned int
+	mainOptions *MainOpt
+	devMode     bool
 
-// Functions mapping
-var Check = gltses.Check
-var DialogMessage = gidg.DialogMessage
+	doTempDir      bool
+	errNoSelection = errors.New("There is no selection currently.")
 
-// var FileChooser = gidgcr.FileChooser
+	columnsNames = [][]string{
+		{"Name", "text"},
+		{"Size", "text"},
+		{"Type", "text"},
+		{"Time", "text"},
+		{"Path", "text"},
+		{"sizeSort", "int64"}, // This one will be invisible (int64)
+		{"dateSort", "int64"}} // This one will be invisible (int64)
 
-// To store original label content for newer than and older than buttons.
-var origLabelNT, origLabelOT string
+	columnsMap = map[string]int{
+		`name`:     0,
+		`size`:     1,
+		`type`:     2,
+		`time`:     3,
+		`path`:     4,
+		`sizeSort`: 5,
+		`dateSort`: 6,
+	}
 
-type searchTimeCal struct {
-	y, m, d uint
-	H, M, S float64
-	Ready   bool
-}
+	filesScanned int
+
+	// Functions mapping
+	timer           = gltsbh.BenchNew(false)
+	statusbar       = gimc.StatusBar{}
+	clipboard       = gimc.Clipboard{}
+	titlebar        *gimc.TitleBar
+	tvs             *gitw.TreeViewStructure
+	Check           = gltses.Check
+	DialogMessage   = gidg.DialogMessage
+	storeFoundFiles []glfsff.StoreFiles
+
+	// Popup
+	popupMenu              *gimc.PopupMenuIconStruct
+	PopupMenuIconStructNew = gimc.PopupMenuIconStructNew
+
+	// To store original label content for newer than and older than buttons.
+	origLabelNT,
+	origLabelOT string
+)
 
 type searchList struct {
 	And []string
@@ -76,7 +101,7 @@ type searchList struct {
 
 type MainOpt struct {
 	/* Public, will be saved and restored */
-	AboutOptions                *gidgat.AboutInfos
+	About                       *gidg.AboutInfos
 	MainWinWidth, MainWinHeight int
 	LanguageFilename            string
 	LastDirectory               string
@@ -88,6 +113,7 @@ type MainOpt struct {
 	FollowSymlinks              bool
 	FileType                    int
 	DateType                    int
+	DateZone                    int
 	Depth                       int
 	WordAnd                     bool
 	WordOr                      bool
@@ -100,23 +126,26 @@ type MainOpt struct {
 	AppLauncher                 string
 	WebSearchEngine             string
 	FileExplorer                string
+	OptionsPath                 string
 
 	/* Private, will NOT be saved */
-	searchNewerThan  searchTimeCal
-	searchOlderThan  searchTimeCal
-	foundFilesList   []string
+	calendar         *gidgcr.Calendar
+	calDataNewerThan *gidgcr.CalendarData
+	calDataOlderThan *gidgcr.CalendarData
+
 	displayFilesList [][]string
 }
 
 // Main options initialisation
 func (opt *MainOpt) Init() {
-	opt.AboutOptions = new(gidgat.AboutInfos)
+	opt.About = new(gidg.AboutInfos)
 
 	opt.LanguageFilename = "assets/lang/eng.lang"
 
 	opt.WebSearchEngine = `https://www.google.com/search?q=`
 	opt.FileExplorer = "thunar"
 	opt.AppLauncher = "xdg-open"
+	opt.Depth = -1
 
 	opt.MainWinWidth = 800
 	opt.MainWinHeight = 600
@@ -143,6 +172,7 @@ func (opt *MainOpt) UpdateObjects() {
 
 	mainObjects.SearchComboboxTextType.SetActive(opt.FileType)
 	mainObjects.SearchComboboxTextDateType.SetActive(opt.DateType)
+	mainObjects.SearchComboboxTextDateZone.SetActive(opt.DateZone)
 
 	mainObjects.SearchCheckbuttonFollowSL.SetActive(opt.FollowSymlinks)
 }
@@ -169,6 +199,7 @@ func (opt *MainOpt) UpdateOptions() {
 
 	opt.FileType = mainObjects.SearchComboboxTextType.GetActive()
 	opt.DateType = mainObjects.SearchComboboxTextDateType.GetActive()
+	opt.DateZone = mainObjects.SearchComboboxTextDateZone.GetActive()
 
 	opt.FollowSymlinks = mainObjects.SearchCheckbuttonFollowSL.GetActive()
 }
@@ -176,20 +207,25 @@ func (opt *MainOpt) UpdateOptions() {
 // Read Options from file
 func (opt *MainOpt) Read() (err error) {
 	var textFileBytes []byte
+	opt.Init()
 	if textFileBytes, err = ioutil.ReadFile(optFilename); err == nil {
 		err = json.Unmarshal(textFileBytes, &opt)
 	}
-	return err
+	if err != nil {
+		fmt.Printf("Error while reading options file: %s\n", err.Error())
+	}
+	return
 }
 
 // Write Options to file
 func (opt *MainOpt) Write() (err error) {
-	var out bytes.Buffer
 	var jsonData []byte
+	var out bytes.Buffer
 	opt.UpdateOptions()
+	opt.About.DlgBoxStruct = nil // remove dialog object before saving
 	if jsonData, err = json.Marshal(&opt); err == nil {
 		if err = json.Indent(&out, jsonData, "", "\t"); err == nil {
-			err = ioutil.WriteFile(optFilename, out.Bytes(), 0644)
+			err = ioutil.WriteFile(optFilename, out.Bytes(), os.ModePerm)
 		}
 	}
 	return err
