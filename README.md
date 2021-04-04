@@ -6,7 +6,7 @@
 
 Take a look [here, H.F.M repositories](https://github.com/hfmrow/) for other useful linux softwares.
 
-- If you just want to use it, simply download the *.deb* version under the "release" tab. 
+- If you just want to use it, simply download the *.deb* version under the [Releases](https://github.com/hfmrow/search-engine/releases) tab. 
 
 - If you want to play inside code, see below "How to compile" section.
 
@@ -54,15 +54,19 @@ Take a look [here, H.F.M repositories](https://github.com/hfmrow/) for other use
 
 - To Produce a stand-alone executable, you must change inside "main.go" file:
   
-        func main() {
-            devMode = true
-        ...
+  ```go
+    func main() {
+        devMode = true
+    ...
+  ```
   
   into
   
-        func main() {
-            devMode = false
-        ...
+  ```go
+    func main() {
+        devMode = false
+    ...
+  ```
 
 This operation indicate that externals data (Image/Icons) must be embedded into the executable file.
 
